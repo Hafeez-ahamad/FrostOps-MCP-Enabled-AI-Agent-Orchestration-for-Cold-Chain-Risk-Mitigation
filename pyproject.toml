@@ -1,0 +1,30 @@
+[project]
+name = "coldchain-dispatch-engine"
+version = "0.1.0"
+description = "Policy-gated, multi-agent cold-chain dispatch engine on a simulated fleet"
+requires-python = ">=3.12,<3.13"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "."
+packages = ["engine", "sim", "api", "mcp_servers"]
+
+[[tool.mypy.overrides]]
+module = ["pyodbc", "langchain_ollama.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: needs the Docker SQL Server (run with: pytest -m integration)",
+]

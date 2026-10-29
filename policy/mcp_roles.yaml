@@ -1,0 +1,24 @@
+# Which MCP tools each agent role may call (spec section 11). Enforced server side:
+# a server built for a role only registers that role's tools, so other tools do not exist
+# for it (calls fail as "unknown tool"), and every tool re-checks the role before running.
+roles:
+  monitor:
+    - get_latest_reading
+    - list_active_breaches
+    - get_rule_hits
+  planner:
+    - get_latest_reading
+    - find_cold_storage
+    - estimate_eta
+    - create_proposal
+    - get_sop_clause
+    - search_sop
+  explainer:
+    - get_latest_reading
+    - list_active_breaches
+    - get_rule_hits
+    - get_sop_clause
+    - search_sop
+  dispatcher_agent:
+    - list_active_breaches
+    - submit_action

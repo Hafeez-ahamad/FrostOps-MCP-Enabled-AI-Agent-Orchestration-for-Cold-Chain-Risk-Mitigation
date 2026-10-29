@@ -1,0 +1,53 @@
+# Action catalogue and autonomy levels (spec section 4). Read only by the deterministic
+# policy gate (engine/gate/gate.py); no LLM reads or changes it. Default deny: an action not
+# listed here is rejected.
+#
+# Levels: L0 observe, L1 recommend, L2 auto-execute (low risk, reversible, within limits),
+#         L3 approve-to-execute (named human, bound to the proposal hash), L4 never autonomous.
+# reversible: yes | no | until_departure  (spec's "false_after_departure")
+# preconditions: named deterministic checks (engine/gate/preconditions.py). An empty list
+#   must be written explicitly. Every L2 action also needs data_quality_ok, whatever the list says.
+version: 1
+actions:
+  notify_driver_restart_cooling:
+    level: L2
+    reversible: "yes"
+    preconditions: [rule_breach_confirmed, data_quality_ok, driver_reachable]
+    cooldown_minutes: 10
+    max_per_shipment_per_hour: 3
+    integration: driver_notify
+  create_incident_ticket:
+    level: L2
+    reversible: "yes"
+    preconditions: [rule_breach_confirmed, data_quality_ok]
+    cooldown_minutes: 60
+    max_per_shipment_per_hour: 1
+    integration: ticketing
+  divert_to_cold_storage:
+    level: L3
+    reversible: until_departure
+    preconditions: [rule_breach_confirmed, facility_capacity_ok, eta_delay_gt_60min]
+    approver_roles: [dispatcher, supervisor]
+    integration: tms_diversion
+  # SOP section 2; not in the spec's excerpt (see docs/decisions.md).
+  divert_to_overflow_depot:
+    level: L3
+    reversible: until_departure
+    preconditions: [rule_breach_confirmed, facility_capacity_ok]
+    approver_roles: [dispatcher, supervisor]
+    integration: tms_diversion
+  escalate_tier2_manager:
+    level: L3
+    reversible: "no"
+    preconditions: []
+    approver_roles: [dispatcher]
+    integration: escalation
+  reject_load:
+    level: L4
+    reversible: "no"
+    preconditions: []
+global_limits:
+  max_auto_actions_per_hour: 30
+  kill_switch: false   # a supervisor can set it in the database; the executor stops at its next poll
+  dry_run: false
+  approval_ttl_minutes: 30   # an approval older than this is rejected

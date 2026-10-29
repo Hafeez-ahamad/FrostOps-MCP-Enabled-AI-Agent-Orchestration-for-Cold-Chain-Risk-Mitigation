@@ -1,0 +1,25 @@
+action_id,incident_id,action,target,level,status,attempts,approved_by,created_at
+ACT-091cacd97350681a,INC-S0007-00065-01,create_incident_ticket,S0007-00065,L2,succeeded,1,gate (auto),2026-03-02T07:10:10
+ACT-a37730ec8fc28ca2,INC-S0007-00065-01,notify_driver_restart_cooling,S0007-00065,L2,succeeded,1,gate (auto),2026-03-02T07:10:10
+ACT-7eda00c1c7eb993f,INC-S0007-00067-01,notify_driver_restart_cooling,S0007-00067,L2,succeeded,1,gate (auto),2026-03-02T07:10:45
+ACT-b142345c83973d20,INC-S0007-00067-01,create_incident_ticket,S0007-00067,L2,succeeded,1,gate (auto),2026-03-02T07:10:45
+ACT-6a2fd31e5f95e51d,INC-S0007-00093-01,escalate_tier2_manager,S0007-00093,L3,succeeded,1,dispatcher:demo,2026-03-02T08:35:00
+ACT-b3032e0d145c68cf,INC-S0007-00093-01,create_incident_ticket,S0007-00093,L2,succeeded,1,gate (auto),2026-03-02T08:55:17
+ACT-cea3638ae8538587,INC-S0007-00093-01,divert_to_cold_storage,CS-ESCONDIDO,L3,succeeded,1,dispatcher:demo,2026-03-02T09:00:00
+ACT-04fca7f97dd5bd4f,INC-S0007-00097-01,escalate_tier2_manager,S0007-00097,L3,succeeded,1,dispatcher:demo,2026-03-02T09:45:00
+ACT-38fe29157c4bc769,INC-S0007-00111-01,escalate_tier2_manager,S0007-00111,L3,succeeded,1,dispatcher:demo,2026-03-02T09:50:00
+ACT-da3da72cdbf139e8,INC-S0007-00115-01,escalate_tier2_manager,S0007-00115,L3,succeeded,1,dispatcher:demo,2026-03-02T10:30:00
+ACT-9583c4bedb40525b,INC-S0007-00115-01,create_incident_ticket,S0007-00115,L2,succeeded,1,gate (auto),2026-03-02T11:20:17
+ACT-e27a80edf64408fd,INC-S0007-00115-01,divert_to_cold_storage,CS-VENTURA,L3,succeeded,1,dispatcher:demo,2026-03-02T11:25:00
+ACT-13481f27e98f32a4,INC-S0007-00143-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T12:05:00
+ACT-1480e71e017c03f9,INC-S0007-00147-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T12:05:00
+ACT-383471a30bef70a0,INC-S0007-00144-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T12:05:00
+ACT-97cfccd28bce4e15,INC-S0007-00151-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T12:15:00
+ACT-b2895ab313ddc22e,INC-S0007-00152-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T12:20:00
+ACT-bde60b86acecc0d5,INC-S0007-00156-01,create_incident_ticket,S0007-00156,L2,succeeded,1,gate (auto),2026-03-02T13:15:30
+ACT-f7a6bce353dd15be,INC-S0007-00156-01,notify_driver_restart_cooling,S0007-00156,L2,succeeded,1,gate (auto),2026-03-02T13:15:30
+ACT-156e710a822f9839,INC-S0007-00174-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T14:40:00
+ACT-e4db7624503e2075,INC-S0007-00176-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T14:45:00
+ACT-70eb3aecb668b92d,INC-S0007-00178-01,divert_to_overflow_depot,IE-OVERFLOW,L3,succeeded,1,dispatcher:demo,2026-03-02T14:55:00
+ACT-8abd707c484c61f9,INC-S0007-00194-01,create_incident_ticket,S0007-00194,L2,succeeded,1,gate (auto),2026-03-02T16:45:56
+ACT-0ae917a6d829e2a6,INC-S0007-00194-01,escalate_tier2_manager,S0007-00194,L3,succeeded,1,dispatcher:demo,2026-03-02T16:50:00

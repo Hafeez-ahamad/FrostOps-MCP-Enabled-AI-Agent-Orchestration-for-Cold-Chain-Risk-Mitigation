@@ -1,0 +1,28 @@
+# One simulated day with every incident type and every noise type.
+# Used by the offline tests and as the quick demo scenario.
+name: smoke
+seed: 7
+start: "2026-03-02T00:00:00"
+duration_hours: 24
+reading_interval_min: 5
+vehicles: 100
+port_bound_share: 0.3
+
+incidents:
+  - {type: reefer_failure,        at_hour: 5.0,  count: 2}
+  - {type: reefer_failure,        at_hour: 8.0,  count: 1, eta_delay_min: 90}
+  - {type: door_open,             at_hour: 13.0, count: 2}
+  - {type: route_delay_cascade,   at_hour: 9.0,  count: 2}
+  - {type: port_congestion_spike, at_hour: 12.0, duration_hours: 3, port: POLB}
+  - {type: driver_unreachable,    at_hour: 14.0, count: 1}
+  - {type: facility_full,         at_hour: 10.0, duration_hours: 6, facility: CS-COMMERCE}
+
+noise:
+  - {type: spike,        count: 3}
+  - {type: flatline,     count: 2}
+  - {type: dropout,      count: 2}
+  - {type: duplicate,    count: 3}
+  - {type: out_of_order, count: 2}
+  - {type: unit_mixup,   count: 2}
+  - {type: gps_jump,     count: 2}
+  - {type: clock_skew,   count: 2}

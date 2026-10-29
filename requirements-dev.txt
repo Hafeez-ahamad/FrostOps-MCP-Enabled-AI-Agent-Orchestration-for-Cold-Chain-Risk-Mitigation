@@ -1,0 +1,9 @@
+# Development and test tools (not needed at runtime).
+-r requirements.txt
+hypothesis==6.170.12
+mypy==2.4.0
+pytest==9.2.0
+ruff==0.17.3
+pandas-stubs==3.0.5.260914
+types-PyYAML==6.0.12.20260906
+types-requests==2.33.0.20261006

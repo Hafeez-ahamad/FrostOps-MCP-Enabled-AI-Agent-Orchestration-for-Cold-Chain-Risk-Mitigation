@@ -1,0 +1,33 @@
+# Cargo types and their temperature bands (degrees C).
+# Only FRESH comes from the SOP (cold_chain_sop.md, section 1).
+# FROZEN and PHARMA are configuration assumptions added for the simulator (spec section 7.1).
+# `share` is the fraction of the simulated fleet carrying each type.
+# `sensitivity` (0-1) weights the risk score (engine/risk/score.py); configuration assumption.
+cargo_types:
+  FRESH:
+    name: Fresh perishables
+    min_c: 0.0
+    max_c: 4.0
+    setpoint_c: 2.0
+    source: sop
+    sop_clause: "§1"
+    share: 0.6
+    sensitivity: 0.7
+  FROZEN:
+    name: Frozen goods
+    min_c: -25.0
+    max_c: -15.0
+    setpoint_c: -20.0
+    source: config_assumption
+    sop_clause: null
+    share: 0.25
+    sensitivity: 0.8
+  PHARMA:
+    name: Pharmaceuticals
+    min_c: 2.0
+    max_c: 8.0
+    setpoint_c: 5.0
+    source: config_assumption
+    sop_clause: null
+    share: 0.15
+    sensitivity: 1.0

@@ -1,0 +1,16 @@
+# Data-quality thresholds (deterministic; no LLM reads or changes these).
+# See engine/dq/checks.py for how each one is used.
+freshness_minutes: 15            # en-route shipment with no reading for longer -> stale (invalid)
+temp_range_c: [-40.0, 60.0]      # outside -> invalid (implausible sensor value)
+region_bbox:                     # operating region (Southern California); outside -> invalid
+  lat_min: 32.0
+  lat_max: 35.5
+  lon_min: -121.0
+  lon_max: -114.0
+max_temp_rate_c_per_min: 1.5     # faster change than this vs the last valid reading -> spike (suspect)
+spike_margin_c: 1.0              # allowance for sensor noise in the spike check
+unit_min_jump_c: 5.0             # unit check only applies to jumps larger than this
+unit_tolerance_c: 1.5            # value converted from F within this of the reference -> unit mix-up (invalid)
+flatline_run: 6                  # this many identical consecutive values -> flatline (suspect)
+max_speed_kmh: 130.0             # implied straight-line speed above this -> GPS jump (suspect)
+clock_skew_tolerance_s: 120      # device timestamp ahead of receive time by more -> clock skew (suspect)

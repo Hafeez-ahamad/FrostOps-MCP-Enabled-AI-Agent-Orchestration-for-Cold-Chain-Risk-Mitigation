@@ -1,0 +1,4 @@
+scenario,seed,shipments,incidents_opened,true_incidents,false_alarms,precision,false_alarms_per_100_shipments,glitch_threshold_readings,glitch_threshold_blocked,suspect_hits
+detection_eval,1,896,41,41,0,1.0,0.0,58,58,6
+detection_eval,2,882,39,39,0,1.0,0.0,48,48,6
+detection_eval,3,900,43,43,0,1.0,0.0,54,54,7

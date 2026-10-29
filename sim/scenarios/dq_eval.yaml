@@ -1,0 +1,30 @@
+# Data-quality evaluation: two simulated days, many glitches of every type, plus incidents
+# (to check the DQ layer does not hide real breaches). Run over several seeds by
+# eval/dq_report.py; the seed here is only the default.
+name: dq_eval
+seed: 1
+start: "2026-03-02T00:00:00"
+duration_hours: 48
+reading_interval_min: 5
+vehicles: 150
+port_bound_share: 0.3
+
+incidents:
+  - {type: reefer_failure,        at_hour: 4.0,  count: 3}
+  - {type: reefer_failure,        at_hour: 20.0, count: 2, eta_delay_min: 90}
+  - {type: door_open,             at_hour: 13.0, count: 3}
+  - {type: door_open,             at_hour: 37.0, count: 3}
+  - {type: route_delay_cascade,   at_hour: 9.0,  count: 3}
+  - {type: port_congestion_spike, at_hour: 30.0, duration_hours: 3, port: POLA}
+  - {type: driver_unreachable,    at_hour: 14.0, count: 2}
+  - {type: facility_full,         at_hour: 26.0, duration_hours: 6, facility: CS-COMMERCE}
+
+noise:
+  - {type: spike,        count: 10}
+  - {type: flatline,     count: 10}
+  - {type: dropout,      count: 10}
+  - {type: duplicate,    count: 10}
+  - {type: out_of_order, count: 10}
+  - {type: unit_mixup,   count: 10}
+  - {type: gps_jump,     count: 10}
+  - {type: clock_skew,   count: 10}

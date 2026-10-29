@@ -1,0 +1,9 @@
+metric,value
+scenario,smoke seed 7 (simulated)
+incidents,16
+gate_decisions,45
+actions_L2_succeeded,9
+actions_L3_succeeded,15
+unauthorised_actions,0
+audit_entries,117
+audit_chain_valid,True

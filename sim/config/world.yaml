@@ -1,0 +1,32 @@
+# Simulated operator in Southern California.
+# All depot, destination and facility names are invented. Coordinates are approximate
+# city locations, used only to get realistic distances.
+depots:
+  - {id: DEP-LB,  name: Long Beach depot, lat: 33.80, lon: -118.19, inland: false}
+  - {id: DEP-VER, name: Vernon depot,     lat: 34.00, lon: -118.21, inland: false}
+  - {id: DEP-ONT, name: Ontario depot,    lat: 34.06, lon: -117.65, inland: true}
+  - {id: DEP-SD,  name: San Diego depot,  lat: 32.75, lon: -117.15, inland: false}
+  - {id: DEP-OXN, name: Oxnard depot,     lat: 34.20, lon: -119.18, inland: false}
+
+ports:
+  - {id: POLB, name: Port of Long Beach,  lat: 33.75, lon: -118.21}
+  - {id: POLA, name: Port of Los Angeles, lat: 33.73, lon: -118.27}
+
+destinations:
+  - {id: POLB,         name: Port of Long Beach terminal,  lat: 33.75, lon: -118.21, port_id: POLB}
+  - {id: POLA,         name: Port of Los Angeles terminal, lat: 33.73, lon: -118.27, port_id: POLA}
+  - {id: DC-IRVINE,    name: Irvine grocery DC,      lat: 33.68, lon: -117.83}
+  - {id: DC-CLARITA,   name: Santa Clarita food DC,  lat: 34.39, lon: -118.54}
+  - {id: DC-TEMECULA,  name: Temecula retail DC,     lat: 33.49, lon: -117.15}
+  - {id: DC-PALMDALE,  name: Palmdale retail DC,     lat: 34.58, lon: -118.12}
+  - {id: DC-CHULA,     name: Chula Vista grocery DC, lat: 32.64, lon: -117.08}
+  - {id: DC-RIVERSIDE, name: Riverside pharma DC,    lat: 33.98, lon: -117.37}
+  - {id: DC-VENTURA,   name: Ventura grocery DC,     lat: 34.28, lon: -119.29}
+
+facilities:
+  - {id: CS-COMMERCE,  name: Commerce emergency cold storage,   lat: 34.00, lon: -118.15, capacity: 20, kind: cold_storage}
+  - {id: CS-RIVERSIDE, name: Riverside emergency cold storage,  lat: 33.95, lon: -117.40, capacity: 15, kind: cold_storage}
+  - {id: CS-ESCONDIDO, name: Escondido emergency cold storage,  lat: 33.12, lon: -117.09, capacity: 10, kind: cold_storage}
+  - {id: CS-VENTURA,   name: Ventura emergency cold storage,    lat: 34.27, lon: -119.23, capacity: 8,  kind: cold_storage}
+  # Named in SOP section 2 as the diversion target when port congestion exceeds 7.0.
+  - {id: IE-OVERFLOW,  name: Inland Empire Overflow Depot (San Bernardino), lat: 34.11, lon: -117.29, capacity: 60, kind: overflow_depot}

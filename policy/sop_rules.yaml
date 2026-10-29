@@ -1,0 +1,37 @@
+# SOP rules implemented by engine/rules/engine.py. Deterministic; no LLM reads or changes them.
+# Every rule names its SOP clause and quotes the sentence it implements; a test checks that the
+# quote and the threshold appear verbatim in that clause of
+# data/policy/cold_chain_sop.md.
+# All comparisons are strict ("exceeds", "greater than"): a value equal to the threshold is
+# not a hit.
+version: 1
+sop_file: cold_chain_sop.md
+rules:
+  R-TEMP-01:
+    title: Cold-chain temperature breach
+    sop_clause: "§1"
+    sop_quote: "a reading above **4.0 °C** opens a cold-chain breach"
+    # The upper limit comes from the cargo band (policy/cargo_types.yaml). For FRESH it is
+    # the SOP's 4.0 C; FROZEN and PHARMA bands are configuration assumptions.
+    threshold_source: cargo_band_max_c
+    sop_threshold: 4.0
+  R-CONG-01:
+    title: Port congestion pauses normal port routing
+    sop_clause: "§2"
+    sop_quote: "rises above **7.0** on the 0–10 scale, normal port routing is paused"
+    port_congestion_gt: 7.0
+    sop_threshold: 7.0
+  R-RISK-01:
+    title: High-risk shipment needs Tier 2 escalation
+    sop_clause: "§3"
+    sop_quote: "above **0.65** goes to the Tier 2 logistics manager"
+    risk_classification: High Risk
+    delay_probability_gt: 0.65
+    sop_threshold: 0.65
+  R-ETA-01:
+    title: Breach with long ETA delay makes the shipment a diversion candidate
+    sop_clause: "§1"
+    sop_quote: "When the ETA delay is more than **60 minutes**, the shipment also becomes a candidate for diversion"
+    requires_rule: R-TEMP-01   # only fires on a reading that also breaches R-TEMP-01
+    eta_delay_min_gt: 60.0
+    sop_threshold: 60.0

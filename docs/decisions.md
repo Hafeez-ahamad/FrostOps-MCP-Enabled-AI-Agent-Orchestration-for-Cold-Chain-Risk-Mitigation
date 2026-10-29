@@ -1,0 +1,84 @@
+# Decisions
+
+One line each: decision — reason — date.
+
+- Spec copied from `Downloads/ColdChain_Autonomous_Dispatch_Engine_Spec.md` to `docs/SPEC.md` — it was not in the repo — 2026-10-28
+- Layout follows spec §16 at the repo root, not a nested `coldchain-dispatch-engine/` folder — build prompt instruction — 2026-10-28
+- C1 still uses the deterministic rules engine for detection; its single LLM agent only triages and selects plans, then goes through the same gate — non-negotiable rule 1 (no LLM decides a threshold) — 2026-10-28
+- LLMs are called only on a rule hit, a `suspect` data-quality result or a close planning call, never per telemetry tick — keeps 30-day replays feasible on a local model — 2026-10-28
+- Add `divert_to_overflow_depot` (L3, one approval per shipment) for SOP §2 — the SOP mandates it but the spec catalogue has no action for it — 2026-10-28
+- Reversibility is a typed enum (`yes`, `no`, `until_departure`); preconditions are named deterministic functions; an empty precondition list must be written explicitly — spec YAML is ambiguous — 2026-10-28
+- Ops schema adds `RuleHits`, `Approvals`, `Facilities`, `PolicyVersions`, `EventQueue`, `ControlFlags`; every role gets INSERT on `AuditLog` only, via a stored procedure — spec references these without listing them — 2026-10-28
+- Depot RLS uses `SESSION_CONTEXT('depot_ids')` set by the API per app user; agent service accounts see all depots — dispatchers are app users, not DB logins — 2026-10-28
+- MVP oracle-best action is a deterministic mapping from true incident type plus full state — simplest "full information" optimiser — 2026-10-28
+- H3 measures attempted unsafe proposals blocked by the gate as well as successful violations — both C1 and C2 sit behind the gate, so successes alone would be 0 in both — 2026-10-28
+- Rollback demo, CD and Terraform are roadmap — no deploy target in the MVP — 2026-10-28
+- Secret scanning: case-insensitive grep locally, `gitleaks` in CI — gitleaks not installed locally (user default) — 2026-10-28
+- Python 3.12 via `uv` for `.venv` (3.12.16 locally) — 2026-10-28
+- Hosted LLM backend is OpenAI; DeepSeek path dropped; Ollama is the default — one hosted backend (user default) — 2026-10-28
+- `torch`, `sentence-transformers`, `langchain-huggingface`, `langchain-pinecone`, `pinecone`, `faiss-cpu` moved to `requirements-rag.txt` with versions unchanged; offline SOP default is in-context section retrieval — keeps CI and the offline tier light (user default) — 2026-10-28
+- Repo-local git identity `hafee <hafeezahamad941@gmail.com>` — no global git identity configured — 2026-10-28
+- Pinecone SOP backend not wired up yet (`SOP_BACKEND=PINECONE` raises a clear error); it cannot be tested offline and no key is configured — 2026-10-28
+- Unknown `AGENT_LLM` values raise instead of silently falling back to Ollama; a missing prompt file raises instead of using a generic prompt — fail loudly rather than run with the wrong configuration — 2026-10-28
+- SQL connection uses `Encrypt=yes` with `TrustServerCertificate=yes` (local only) — encrypted even locally — 2026-10-28
+- CI integration job (SQL Server service container) added in Phase 1 with the first integration test — `pytest -m integration` with no tests exits 5 — 2026-10-28
+- SQL Server image tag `2022-latest` — no specific CU required yet; pin once integration tests exist — 2026-10-28
+- Code is formatted with `ruff format`, checked in CI — one formatter, no style debates — 2026-10-28
+- Incident `at_hour` opens a 2-hour window; each picked shipment starts its incident at the first tick with >= 15 min driven and >= 2 h of trip left — a single instant often had no eligible shipment — 2026-10-28
+- Each vehicle starts at a random point of its first cycle — otherwise the whole fleet left in the first hours and the morning had almost no trucks on the road — 2026-10-28
+- Clean simulated data is kept below every SOP threshold (congestion capped at 6.8, base route risk < 7, small natural delays) so every rule hit maps to a labelled incident — keeps ground truth unambiguous for recall/false-alarm measurement — 2026-10-28
+- Port congestion is NULL for shipments not bound for a port — otherwise one port spike would trip R-CONG-01 for every truck in the region — 2026-10-28
+- Glitches only hit incident-free shipments, one glitch per shipment — clean labels; mixed glitch+incident cases are a Phase 5 hard slice — 2026-10-28
+- New legacy columns: `RCPT_DTTM`, `CNSG_NO`, `TRLR_NO`, `HUB_CD`, `PROD_CLS`, `PKT_SEQ`, `ARR_SLIP_MIN`, `LEG_STAT`; dedup key (CNSG_NO, PKT_SEQ) with a filtered unique index — needed for append+dedup, out-of-order, clock-skew and freshness checks — 2026-10-28
+- Kaggle stress set goes to its own table `dbo.RFR_TELEM_KGL` (one pseudo-shipment per row) — it is not a coherent fleet and must not pollute the simulator's latest-valid view — 2026-10-28
+- `VW_FLEET_NOW` dropped; the explainer's tools now read `VW_LATEST_VALID_READING` (en-route shipments only) — one live implementation of "active" — 2026-10-28
+- RLS filter predicate on the raw table (inherited through the view): visible to db_owner, members of `rl_all_depots` (service accounts) or sessions whose read-only `SESSION_CONTEXT('depot_ids')` lists the depot — dispatchers are app users, not DB logins — 2026-10-28
+- Console DB connections use NullPool — SESSION_CONTEXT would otherwise leak one dispatcher's depot scope to the next request on a pooled connection — 2026-10-28
+- Phase 1 logins: `ccx_reader` (explainer), `ccx_ingest` (ingest + DQ, append-only), `ccx_console` (RLS-scoped) — per-agent logins come in Phase 7 — 2026-10-28
+- db-init runs in Python (`engine/dbadmin.py`: splits on GO, substitutes and escapes `$(VAR)`) instead of `docker exec sqlcmd` — one implementation for local and CI, unit-testable — 2026-10-28
+- CI integration job starts SQL Server with `docker run` and random per-run passwords — no password literal in the workflow for gitleaks to trip on — 2026-10-28
+- DQ thresholds in `policy/data_quality.yaml` (max temperature rate 1.5 C/min, flatline 6, freshness 15 min, ...) — above the fastest real change the physics can produce (door open in heat ~0.9 C/min) — 2026-10-28
+- One clean reading flagged after a flatline in seed 2 is reported, not tuned away — it is indistinguishable from a still-stuck sensor — 2026-10-28
+- Pinned numpy 2.5.4 and PyYAML 6.0.3 (already installed as transitive deps); dev: pandas-stubs 3.0.5.260914, types-PyYAML 6.0.12.20260906 — new direct imports — 2026-10-28
+- R-TEMP-01 only fires above the band maximum — the SOP declares a breach when the temperature "exceeds 4.0", not below the band — 2026-10-28
+- R-ETA-01 fires only on a reading that also breaches R-TEMP-01 — simplest stateless reading of "ETA delay > 1 h while R-TEMP-01 active" — 2026-10-28
+- Rules run on valid and suspect readings; only valid hits open or merge incidents; suspect hits are kept for the monitor's triage (Phase 4); invalid readings are never evaluated — matches spec section 6 (monitor triages ambiguous sensor behaviour) — 2026-10-28
+- Risk score uses ETA delay as the exposure proxy because remaining time to delivery is not in the legacy telemetry; cargo sensitivity weights (FRESH 0.7, FROZEN 0.8, PHARMA 1.0) are config assumptions — spec section 8.2 names the factors, not their values — 2026-10-28
+- Incidents clear after 30 min of valid readings with no hits; a later hit opens a new incident; ids are `INC-<shipment>-<n>` — deterministic and replayable — 2026-10-28
+- Phase 2 detection writes to `ops.RuleHits`/`ops.Incidents` through the ingest login (granted INSERT/UPDATE on Incidents) until the monitor gets its own login in Phase 7 — avoid a half-built role model now — 2026-10-28
+- Port-spike ground truth is labelled after the simulation from each truck's actual (delayed) timeline; all trucks that could be delayed into the window are reserved from noise — the first detection run counted 2 correct alerts as false alarms because delayed trucks were unlabelled — 2026-10-28
+- Door-open events that never breach the band are excluded from "expected" detections — their oracle outcome is no incident — 2026-10-28
+- Proposal id is derived from (incident, action, target); a re-submission is a gate DUPLICATE — idempotency starts at the gate, not only in the executor — 2026-10-28
+- The gate verifies evidence against `ops.RuleHits` instead of trusting the proposal's claimed DQ status — a confused or injected planner must not unlock an L2 action by claiming valid data — 2026-10-28
+- `data_quality_ok` is enforced for every L2 action even if the YAML omits it; a freshness flag after the evidence also fails it — spec section 7.2 says policy requires it for L2 — 2026-10-28
+- Database control flags can only switch the kill switch / dry run on over the YAML default — either source saying "on" wins (the safer reading) — 2026-10-28
+- Approval TTL 30 minutes; an approval must not predate the proposal or be in the future; limits and preconditions are re-checked on approval — "an old or reused approval is rejected", and the world may change while a proposal waits — 2026-10-28
+- Executor re-checks authorisation (proposal approved with the same hash; stored human approval for L3) from the database before enqueueing and before every attempt — defence in depth for invariants 1 and 2 — 2026-10-28
+- Retry policy: 3 attempts, backoff 60 s then 120 s (simulated time); retryable = transport error, 5xx, timeout, partial response, driver_unreachable; other 4xx are final — spec section 14, driver-notification row — 2026-10-28
+- Final action failure marks the incident `needs_attention` (new incident status) and proposes an L3 Tier 2 escalation — spec section 9: "escalate to a human and mark the incident needs_attention" — 2026-10-28
+- The dispatcher falls back to the planner's next candidate only when every rejection reason is a failed precondition (driver unreachable -> escalation); kill switch, cooldown or audit failure never trigger alternatives — 2026-10-28
+- Temperature incidents get a companion `create_incident_ticket` (L2) besides the primary action — records every excursion and gives the second L2 action — 2026-10-28
+- Planner utilities (harm 110/100/60/50/40, delay 0.2 per minute, irreversibility 10/5/0) are illustrative, chosen so the ranking follows the SOP; close-call margin 10 — spec section 8.3 names the factors, not their values — 2026-10-28
+- Mock latency is simulated via an `X-Mock-Latency-Ms` header counted against the client timeout — tests never sleep; latency lives in simulated time — 2026-10-28
+- Integration clients depend on a small `HttpClient` protocol, not `httpx.Client` — Starlette 1.10's TestClient is built on `httpx2`; real services use `httpx` — 2026-10-28
+- `engine/data/memory_db.py` provides the in-memory SQLite used by tests, demos and (later) replay — eval scripts must not import from `tests/` — 2026-10-28
+- Phase 3 gate/executor run on SQL Server as the admin login in the integration test; per-role logins and grants for the new tables come in Phase 7 — avoid a half-built role model — 2026-10-28
+- Pinned fastapi 0.162.0, httpx 0.28.1, uvicorn 0.54.0 (httpx and uvicorn were already installed transitively) — mock services and clients — 2026-10-28
+- `langgraph-checkpoint-sqlite==3.1.1` (not 3.1.2) — the newest release would upgrade the pinned langgraph-checkpoint 4.2.0 -> 4.3.1; 3.1.1 keeps the pin — 2026-10-28
+- LLM roles get tool outputs as delimited context prepared by deterministic code instead of calling tools themselves — same information for C1 and C2, fewer round trips for a 7B local model, and fixed parameterised tools only — 2026-10-28
+- C1 is asked whenever a plan has 2+ candidates; C2's monitor only on temperature incidents and its planner only on close calls — matches spec section 6 ("LLM only where ambiguity exists") for C2 and "one agent with all tools" for C1; H4 will measure the cost difference — 2026-10-28
+- Triage can only re-weight candidates (door-open -> ticket first); it can never remove every action, and only confident verdicts (>= 0.7) count — the LLM must not decide whether an action runs — 2026-10-28
+- After a door-open triage the fallback escalation weight drops from 40 to 10 — a recovered door-open needs no Tier 2 manager — 2026-10-28
+- Temperature incidents list `create_incident_ticket` as a candidate (harm 10) as well as a companion — the LLM roles need it as a choosable option; the companion submission then becomes a gate DUPLICATE — 2026-10-28
+- Candidate lines render as `action target=X` (no `->`) — data blocks escape `>`, which made `->` unreadable — 2026-10-28
+- Decision graphs run without a checkpointer; their durable record is the database (proposals, decisions, audit, event queue). The chat agent uses the SQLite checkpointer in data/state/ (gitignored) — per-incident graphs are short-lived and their state holds non-serialisable engine objects — 2026-10-28
+- Token budget 200,000 per run (`LLM_TOKEN_BUDGET_PER_RUN`), shared by every role; a call that crosses the limit completes, later calls are refused and logged — same budget for every configuration (spec section 13.4) — 2026-10-28
+- Offline tests and plumbing runs use `engine/llm/fake.py` (a scripted chat model); it is labelled as such and never used for reported results — prove the wiring without network or keys — 2026-10-28
+- The planner writes proposals only as drafts, through `ops.usp_InsertDraftProposal`, and the action server submits them to the gate, which re-hashes the stored payload — the planner login never gets INSERT on `ops.Proposals`, and a draft edited in the database is rejected — 2026-10-29
+- The Phase 5 replay runs in a separate git worktree at a fixed commit, as a detached process — edits in the main folder cannot change a running campaign; the worktree's only untracked files are the runner script and the results — 2026-10-29
+- The Streamlit console is a client of the FastAPI service, not of the database — role and depot checks live in one place (the API), and the console holds no DB credentials — 2026-10-29
+- Alert-only mode starts after 3 failed detection writes (`DBAPIError`, retried immediately on the virtual clock) or on a reading missing legacy columns, which is refused; only `POST /admin/alert-only/clear` leaves it — degrade to a safer mode, never a more permissive one (`docs/engineering-rules.md` rule 3) — 2026-10-29
+- Weather is read through `StaleCache` for temperature incidents only and only adds a note and low confidence; no precondition or L2 action uses it. The congestion API has no consumer (R-CONG-01 uses the telemetry's `PORT_Q_IX`) — spec section 14 row, without making weather a hidden dependency — 2026-10-29
+- Policy updates may only tighten autonomy; loosening needs a code change and restart — an API caller with a stolen admin token cannot make an L3 action automatic — 2026-10-29
+- Hypothesis runs without deadline or the too-slow health check (`tests/conftest.py`) — the 8 GB machine pages while the replay runs; same examples and properties — 2026-10-29
+- Demo dispatcher `dana` covers DEP-SD and DEP-LB — the demo's escalation (driver API down) is in DEP-SD, and DEP-OXN stays out of scope to show depot filtering — 2026-10-29

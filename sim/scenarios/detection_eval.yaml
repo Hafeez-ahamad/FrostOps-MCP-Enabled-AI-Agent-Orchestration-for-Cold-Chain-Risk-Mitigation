@@ -1,0 +1,36 @@
+# Detection evaluation: two simulated days with several incidents of every type and noise of
+# every type on other shipments. Run over several seeds by eval/detection_report.py.
+name: detection_eval
+seed: 1
+start: "2026-03-02T00:00:00"
+duration_hours: 48
+reading_interval_min: 5
+vehicles: 150
+port_bound_share: 0.3
+
+incidents:
+  - {type: reefer_failure,        at_hour: 3.0,  count: 3}
+  - {type: reefer_failure,        at_hour: 27.0, count: 3}
+  - {type: reefer_failure,        at_hour: 18.0, count: 2, eta_delay_min: 90}
+  - {type: reefer_failure,        at_hour: 40.0, count: 2, eta_delay_min: 120}
+  - {type: door_open,             at_hour: 13.0, count: 3}
+  - {type: door_open,             at_hour: 37.0, count: 3}
+  - {type: door_open,             at_hour: 2.0,  count: 2}
+  - {type: route_delay_cascade,   at_hour: 9.0,  count: 3}
+  - {type: route_delay_cascade,   at_hour: 33.0, count: 3}
+  - {type: port_congestion_spike, at_hour: 12.0, duration_hours: 3, port: POLB}
+  - {type: port_congestion_spike, at_hour: 30.0, duration_hours: 2, port: POLA}
+  - {type: driver_unreachable,    at_hour: 15.0, count: 2}
+  - {type: driver_unreachable,    at_hour: 43.0, count: 1}
+  - {type: facility_full,         at_hour: 10.0, duration_hours: 6, facility: CS-COMMERCE}
+  - {type: facility_full,         at_hour: 35.0, duration_hours: 6, facility: CS-COMMERCE}
+
+noise:
+  - {type: spike,        count: 6}
+  - {type: flatline,     count: 5}
+  - {type: dropout,      count: 5}
+  - {type: duplicate,    count: 5}
+  - {type: out_of_order, count: 5}
+  - {type: unit_mixup,   count: 5}
+  - {type: gps_jump,     count: 5}
+  - {type: clock_skew,   count: 5}

@@ -1,0 +1,15 @@
+.env
+venv/
+.venv/
+__pycache__/
+data/raw/
+Misc/
+notes.pdf
+eval/results/tmp/
+*.log
+data/state/
+.hypothesis/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+eval/results/phase5/
