@@ -9,12 +9,12 @@ Legend: `[x]` done with proof, `[ ]` not done, `[~]` partly done (see note).
 |---|---|---|---|
 | 1 | Rules engine is deterministic with boundary tests; no LLM decides a threshold | `tests/unit/test_rules.py` (boundaries, Hypothesis properties, SOP traceability, `test_deterministic_core_imports_no_llm_library`) | [x] |
 | 2 | Policy gate default-denies; zero unauthorised actions across all replay runs of C0–C2 | `test_invariant_1_unknown_actions_are_denied`; `eval/results/phase3_demo_summary.csv` (C0, smoke: 0 unauthorised); C1/C2 replay in Phase 5 | [~] C0 demo only |
-| 3 | Each agent has its own DB identity; planner cannot execute, executor cannot read raw telemetry | `db/roles.sql`, `RoleEngines` (`engine/runtime.py`); `tests/integration/test_roles_sqlserver.py` (`test_planner_cannot_insert_actions`, `test_executor_cannot_read_raw_telemetry`, `test_explainer_cannot_write`, audit no-update/delete, draft procedure) | [~] written; not run (no Docker) |
+| 3 | Each agent has its own DB identity; planner cannot execute, executor cannot read raw telemetry | `db/roles.sql`, `RoleEngines` (`engine/runtime.py`); `tests/integration/test_roles_sqlserver.py` (`test_planner_cannot_insert_actions`, `test_executor_cannot_read_raw_telemetry`, `test_explainer_cannot_write`, audit no-update/delete, draft procedure) | [x] passed in CI run #4 (`3a0ffd7`, SQL Server 2022) |
 | 4 | Data-quality layer stops seeded glitches from triggering L2 actions | Phase 1: glitches flagged (`test_dq_on_scenario.py`, `eval/results/phase1_dq_detection.csv`); Phase 3: `test_invariant_5_data_quality_failure_blocks_action` and siblings | [x] |
 | 5 | All five safety invariants (spec §4) pass as named tests | `tests/unit/test_safety_invariants.py` (`test_invariant_1_…` to `test_invariant_5_…`), mutation-checked | [x] |
 | 6 | Replay results for C0, C1, C2 (and C3 red-team) with CIs in `eval/results/` and `eval/EVAL.md` | `eval/replay.py`, `eval/report.py`; campaigns not yet run on the current code | [ ] not yet measured |
 | 7 | Failure-injection table (spec §14) with a test per row; fail-closed audit demonstrated | `tests/unit/test_failure_injection.py` (weather/congestion down or slow, driver API fails, transient and persistent DB failure, audit fails, LLM malformed/unavailable, duplicated events, schema drift) | [x] |
-| 8 | `pytest` offline passes; `pytest -m integration` passes against Docker; CI green; gitleaks clean | offline: 380 passed (2026-10-29); integration, CI, gitleaks: not run | [~] offline only |
+| 8 | `pytest` offline passes; `pytest -m integration` passes against Docker; CI green; gitleaks clean | offline and integration tests, ruff, mypy and gitleaks all green in CI run #4 (`3a0ffd7`, 2026-10-31) | [x] |
 | 9 | README follows spec §19 | `README.md` (order of §19); replay results and the demo GIF still TBD | [~] |
 | 10 | All Phase 7 docs exist and match the code | `docs/runbook.md`, `docs/architecture.md`, `docs/threat-model.md`, `docs/data-card.md`, `docs/scoping-note.md`; Terraform and CI/CD with rollback are roadmap (`docs/engineering-rules.md` rule 8) | [x] MVP docs |
 | 11 | `docs/demo-script.md` for the 3-minute video | `docs/demo-script.md` (timeline checked offline); video not recorded | [x] script |
@@ -30,9 +30,9 @@ Legend: `[x]` done with proof, `[ ]` not done, `[~]` partly done (see note).
 | Pinecone as an optional SOP backend | deferred (see decisions) | [ ] |
 | Console renders offline | `tests/unit/test_console.py` | [x] |
 | Docs aligned with code (README, setup) | `README.md`, `.env.example`, `tasks.ps1` | [x] |
-| CI: ruff + mypy + pytest + gitleaks | `.github/workflows/ci.yml` | [~] written; not run (no remote yet) |
-| Secret scan clean | local case-insensitive grep clean; gitleaks runs in CI | [~] gitleaks not run yet |
-| `db/raw_schema.sql`, `db/roles.sql`, `docker-compose.yml`, `db-init` | files exist | [~] not run (Docker not installed) |
+| CI: ruff + mypy + pytest + gitleaks | `.github/workflows/ci.yml` | [x] green in CI run #4 |
+| Secret scan clean | local case-insensitive grep clean; gitleaks runs in CI | [x] gitleaks green in CI run #4 |
+| `db/raw_schema.sql`, `db/roles.sql`, `docker-compose.yml`, `db-init` | files exist; applied and exercised by the integration job in CI run #4 | [x] |
 
 ## Phase 1 — Simulator and data layer
 
@@ -46,18 +46,19 @@ Spec "done when": reproducible scenario by seed; DQ flags the seeded glitches.
 | All 6 incident types with ground truth and oracle action | `test_every_incident_type_is_seeded_and_labelled` and per-type tests | [x] |
 | All 8 noise types with labels | `test_every_noise_type_is_seeded_on_incident_free_shipments`, `test_glitches_change_the_stream_as_documented` | [x] |
 | Raw telemetry columns (`CNSG_NO`, `TRLR_NO`, `HUB_CD`, `PROD_CLS`, ...) | `engine/data/schema.py`, `db/raw_schema.sql` | [x] |
-| Append + dedup ingestion (not `replace`) | `tests/unit/test_data_layer.py` (SQLite); `test_ingest_twice_inserts_nothing` (SQL Server) | [~] SQL Server test not run |
+| Append + dedup ingestion (not `replace`) | `tests/unit/test_data_layer.py` (SQLite); `test_ingest_twice_inserts_nothing` (SQL Server) | [x] passed in CI run #4 |
 | DQ layer → `valid / suspect / invalid` in `DataQualityFlags` | `tests/unit/test_dq_checks.py` (boundaries), `test_runner_matches_the_in_memory_stream` | [x] |
 | DQ flags the seeded glitches; clean and incident readings untouched | `tests/unit/test_dq_on_scenario.py`; `eval/results/phase1_dq_detection.csv` (seeds 1–3: recall 1.0 on every type; 1 false flag in 71,828 clean readings; 0 incident readings hidden) — **simulated** | [x] |
-| `VW_LATEST_VALID_READING` (one row per shipment) | `db/ops_schema.sql`; Python reference `engine/data/latest.py`; `test_latest_valid_view_matches_the_python_reference` | [~] SQL Server test not run |
-| Row-level security by depot | `db/roles.sql`; `test_console_sees_only_its_depots`, `test_console_without_a_depot_scope_sees_nothing`, `test_depot_scope_cannot_be_changed_by_the_session` | [~] not run |
-| View-plus-DENY and append-only ingest login | `test_readers_cannot_touch_the_raw_table`, `test_ingest_login_cannot_delete_or_update` | [~] not run |
-| Schema drift check (spec §14 row) | `test_schema_drift` | [~] not run |
+| `VW_LATEST_VALID_READING` (one row per shipment) | `db/ops_schema.sql`; Python reference `engine/data/latest.py`; `test_latest_valid_view_matches_the_python_reference` | [x] passed in CI run #4 |
+| Row-level security by depot | `db/roles.sql`; `test_console_sees_only_its_depots`, `test_console_without_a_depot_scope_sees_nothing`, `test_depot_scope_cannot_be_changed_by_the_session` | [x] passed in CI run #4 |
+| View-plus-DENY and append-only ingest login | `test_readers_cannot_touch_the_raw_table`, `test_ingest_login_cannot_delete_or_update` | [x] passed in CI run #4 |
+| Schema drift check (spec §14 row) | `test_schema_drift` | [x] passed in CI run #4 |
 | Kaggle CSV as optional stress set, separate command | `engine/data/kaggle.py`, `tasks.ps1 load-kaggle`, `test_kaggle_rows_map_to_legacy_columns` | [x] mapping tested; load not run |
-| CI integration job (SQL Server 2022) | `.github/workflows/ci.yml` `integration` | [~] written; not run (no remote) |
+| CI integration job (SQL Server 2022) | `.github/workflows/ci.yml` `integration` | [x] green in CI run #4 |
 
-Integration tests (`tests/integration/`) have never run: Docker and ODBC Driver 18 are not
-installed on the development machine, and there is no remote for CI yet.
+Integration tests (`tests/integration/`) run only in CI (SQL Server 2022 service container and
+ODBC Driver 18): the first run found one real bug, an ODBC pooled connection leaking its depot
+scope to the next session, fixed in `engine/db.py`. They are green in CI run #4.
 
 ## Phase 2 — Rules, risk, incidents
 
@@ -71,8 +72,8 @@ Spec "done when": boundary tests green; detection recall measured on seeded data
 | No LLM in the deterministic core | `test_deterministic_core_imports_no_llm_library` | [x] |
 | Invalid readings never evaluated; suspect hits kept for triage, never open incidents | `test_invalid_readings_are_never_evaluated`, `test_non_valid_readings_never_open_or_clear` | [x] |
 | Documented risk formula | `engine/risk/score.py`, `docs/rules-and-incidents.md`, `tests/unit/test_risk.py` | [x] |
-| Incident open / merge / clear; one open incident per shipment | `tests/unit/test_incidents.py`; DB index test `test_database_allows_only_one_open_incident_per_shipment` | [~] DB test not run |
-| `ops.RuleHits`, `ops.Incidents` + store | `db/ops_schema.sql`, `engine/incidents/store.py`, `test_store_appends_hits_and_upserts_incidents`, `test_schema_drift` | [~] SQL Server tests not run |
+| Incident open / merge / clear; one open incident per shipment | `tests/unit/test_incidents.py`; DB index test `test_database_allows_only_one_open_incident_per_shipment` | [x] passed in CI run #4 |
+| `ops.RuleHits`, `ops.Incidents` + store | `db/ops_schema.sql`, `engine/incidents/store.py`, `test_store_appends_hits_and_upserts_incidents`, `test_schema_drift` | [x] passed in CI run #4 |
 | Detection recall and false-alarm rate measured on seeded data | `eval/results/phase2_detection.csv`, `eval/results/phase2_false_alarms.csv` (detection_eval, seeds 1–3: 123 of 123 expected incidents detected; 0 false alarms in 2,678 shipments; 160 of 160 glitched readings that would have crossed a threshold stopped by data quality) — **simulated** | [x] |
 
 
@@ -92,7 +93,7 @@ Spec "done when": safety invariants (§4) pass as tests; two auto actions and on
 | Mock services (driver, ticketing, TMS, facilities, weather, congestion): FastAPI apps with injectable failure, latency, partial responses | `sim/mock_services/`, `tests/unit/test_mock_services.py` | [x] |
 | Append-only, hash-chained AuditLog written before each action; fail closed | `tests/unit/test_audit_and_policy.py` (`test_executor_does_not_call_the_integration_when_audit_fails`, `test_gate_rejects_when_the_audit_write_fails`, chain tamper tests) | [x] |
 | Demo: two auto actions and one approval-gated action | `eval/phase3_demo.py` -> `eval/results/phase3_demo_*.csv` (smoke, simulated: 9 L2 + 15 L3 succeeded, 0 unauthorised, audit chain valid); `test_two_auto_actions_and_an_approval_gated_action_run` | [x] |
-| New ops tables on SQL Server | `db/ops_schema.sql`; `test_schema_drift`, `test_l2_and_approved_l3_run_on_sql_server_with_a_valid_audit_chain` | [~] not run |
+| New ops tables on SQL Server | `db/ops_schema.sql`; `test_schema_drift`, `test_l2_and_approved_l3_run_on_sql_server_with_a_valid_audit_chain` | [x] passed in CI run #4 |
 
 
 ## Phase 4 — LLM roles and configurations
@@ -146,7 +147,7 @@ Spec "done when": approve/reject flow works; MCP auth tests pass.
 
 | Item | Proof | Status |
 |---|---|---|
-| Per-agent DB logins and grants; planner drafts only through a procedure | `db/roles.sql`, `db/ops_schema.sql`, `engine/db.py`, `RoleEngines` | [~] written; SQL Server tests not run |
+| Per-agent DB logins and grants; planner drafts only through a procedure | `db/roles.sql`, `db/ops_schema.sql`, `engine/db.py`, `RoleEngines` | [x] passed in CI run #4 |
 | Threat model mapped to controls and tests | `docs/threat-model.md` (T1–T13) | [x] |
 | Prompt-injection tests (strings × locations, obedient LLM) | `tests/unit/test_injection.py` | [x] |
 | Fail-closed audit with an alert | `test_audit_failure_blocks_the_gate_and_the_executor_and_raises_an_alert` | [x] |
@@ -156,5 +157,5 @@ Spec "done when": approve/reject flow works; MCP auth tests pass.
 | Runbook, architecture, demo script, scoping note, data card | `docs/` | [x] |
 | Rollback demo (policy version) | `docs/runbook.md` §5; `test_stricter_policy_update_is_accepted_versioned_and_applied` | [~] tested; not demoed |
 | Runbook followed by someone else | — | [ ] |
-| CI run, gitleaks | `.github/workflows/ci.yml` | [ ] not run (no remote; pushing needs the owner's OK) |
+| CI run, gitleaks | `.github/workflows/ci.yml`; CI run #4 (`3a0ffd7`) green | [x] |
 | Terraform, Grafana dashboards, denial-spike alert | — | roadmap |
