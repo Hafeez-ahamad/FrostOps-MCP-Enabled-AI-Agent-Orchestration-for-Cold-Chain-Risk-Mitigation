@@ -4,7 +4,9 @@ A new action catalogue is accepted only if it does not make any existing action 
 autonomous: an L3 action may not become L2, an L4 action may not become executable, and an L2
 action may not lose any of its preconditions. Making things stricter (or removing an action,
 which the gate then denies by default) is always allowed. Every accepted version is stored in
-ops.PolicyVersions with its hash, author and reason, and the change is audited first.
+ops.PolicyVersions with its hash, author and reason, and the change is audited first. The
+catalogue loaded at startup is stored as the first version, and an update must carry a `version`
+higher than the latest stored one.
 """
 
 from dataclasses import dataclass
@@ -59,6 +61,35 @@ class PolicyAdmin:
     engine: Engine
     catalog: ActionCatalog
     yaml_text: str
+    now: datetime
+
+    def __post_init__(self) -> None:
+        if self.catalog.version > self._latest_version():
+            self._store(
+                self.catalog, self.yaml_text, "system", "initial policy at startup", self.now
+            )
+
+    def _latest_version(self) -> int:
+        with self.engine.connect() as conn:
+            return (
+                conn.execute(select(func.max(POLICY_VERSIONS.c.Version))).scalar_one_or_none() or 0
+            )
+
+    def _store(
+        self, catalog: ActionCatalog, yaml_text: str, author: str, reason: str, now: datetime
+    ) -> None:
+        with self.engine.begin() as conn:
+            conn.execute(
+                insert(POLICY_VERSIONS),
+                {
+                    "Version": catalog.version,
+                    "PolicyHash": catalog.policy_hash,
+                    "YamlText": yaml_text,
+                    "Author": author,
+                    "Reason": reason[:400],
+                    "CreatedAt": now,
+                },
+            )
 
     def current(self) -> dict[str, Any]:
         with self.engine.connect() as conn:
@@ -83,10 +114,9 @@ class PolicyAdmin:
         problems = safety_problems(self.catalog, new)
         if problems:
             raise PolicyRejected("; ".join(problems))
-        with self.engine.connect() as conn:
-            latest = (
-                conn.execute(select(func.max(POLICY_VERSIONS.c.Version))).scalar_one_or_none() or 0
-            )
+        latest = self._latest_version()
+        if new.version <= latest:
+            raise PolicyRejected(f"policy version {new.version} must be higher than {latest}")
         AuditLog(self.engine).append(
             "policy_updated",
             author,
@@ -97,17 +127,6 @@ class PolicyAdmin:
                 "reason": reason,
             },
         )
-        with self.engine.begin() as conn:
-            conn.execute(
-                insert(POLICY_VERSIONS),
-                {
-                    "Version": latest + 1,
-                    "PolicyHash": new.policy_hash,
-                    "YamlText": yaml_text,
-                    "Author": author,
-                    "Reason": reason[:400],
-                    "CreatedAt": now,
-                },
-            )
+        self._store(new, yaml_text, author, reason, now)
         self.catalog, self.yaml_text = new, yaml_text
         return new

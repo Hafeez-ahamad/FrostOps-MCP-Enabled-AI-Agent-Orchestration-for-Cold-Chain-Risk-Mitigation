@@ -140,7 +140,7 @@ Spec "done when": approve/reject flow works; MCP auth tests pass.
 | Console (spec §12 screens) as an API client | `console/app.py`, `tests/unit/test_console.py` (fake API through AppTest: board, approve sends the hash, kill switch) | [x] |
 | Four MCP servers with server-side allow-lists per role | `mcp_servers/servers.py`, `policy/mcp_roles.yaml`, `tests/unit/test_mcp_servers.py` (listed tools, "Unknown tool", evidence from the DB, drafts through the gate, edited draft rejected) | [x] |
 | MCP tool-call benchmark (spec §11: two model backends) | — | [ ] out of scope: only local Ollama is approved, so at most one backend |
-| Approve/reject flow run by a person in the browser | `docs/demo-script.md` | [ ] not yet (checked offline only) |
+| Approve/reject flow run in the browser | `docs/demo-script.md`. Run on 2026-10-31 on the simulated smoke day (C0, 10 h): wrong hash rejected, right hash executed, reuse rejected over the API; an L3 divert approved in the Streamlit console (built-in browser, driven by the agent, not by the owner) showed `Gate: execute`, then `succeeded` after the clock advanced, audit chain valid | [x] |
 
 ## Phase 7 — Security and ops (MVP part)
 

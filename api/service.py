@@ -45,6 +45,7 @@ class EngineService:
             self.runtime.engines.gate,
             self.runtime.catalog,
             ACTIONS_PATH.read_text(encoding="utf-8"),
+            self.now,
         )
 
     @property

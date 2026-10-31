@@ -85,7 +85,7 @@ In alert-only mode:
 | Check | Where | Healthy |
 |---|---|---|
 | Liveness and mode | `GET /health` | `status: ok`, `alert_only: false`, kill switch as intended |
-| Audit chain | `GET /audit` (auditor, supervisor, admin) | `chain_valid: true` |
+| Audit chain | `GET /audit` (auditor, supervisor, admin). It reads the whole log to verify the chain, so use it for checks, not for polling | `chain_valid: true` |
 | Approval queue | `GET /proposals?status=pending`, or the console's *Approval queue* | Depth is not growing; approvals expire after 30 min |
 | Metrics | `GET /metrics` (Prometheus text) | See below |
 | Logs | stderr, one JSON object per line | Follow one incident with `correlation_id = COR-<incident id>` |

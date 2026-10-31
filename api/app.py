@@ -225,7 +225,11 @@ def create_app(service: EngineService, users: UserDirectory, chat: ChatFn | None
         if chat is None:
             raise HTTPException(503, "chat is not configured")
         thread = body.thread_id or f"{user.user_id}-{uuid.uuid4().hex[:8]}"
-        return {"thread_id": thread, "answer": chat(body.message, thread, user)}
+        try:
+            answer = chat(body.message, thread, user)
+        except Exception as exc:  # noqa: BLE001 - any model-side failure (connection, config, timeout)
+            raise HTTPException(503, f"Chat model unavailable: {exc}") from exc
+        return {"thread_id": thread, "answer": answer}
 
     @app.get("/audit")
     def audit(user: UserDep, event_type: str | None = None, limit: int = 200) -> dict[str, Any]:

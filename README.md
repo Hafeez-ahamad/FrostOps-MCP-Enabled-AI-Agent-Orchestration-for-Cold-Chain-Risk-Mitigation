@@ -98,6 +98,16 @@ To run the API and console on a simulated day:
 .\tasks.ps1 console                               # paste a token in the sidebar
 ```
 
+On Linux or macOS, with Python 3.12 (the commands CI uses):
+
+```bash
+python -m venv .venv && . .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m pytest                       # offline tests
+python -m api                          # API on http://127.0.0.1:8000, prints demo tokens
+streamlit run console/app.py           # console, in a second terminal
+```
+
 - **C1/C2.** These need a local [Ollama](https://ollama.com) model: run `ollama pull qwen2.5:7b`.
 - **SQL Server.** The SQL Server path (`db-up`, `db-init`, `sim`, `test-integration`) needs Docker Desktop and ODBC Driver 18. Copy `.env.example` to `.env` first.
 - **Operations.** The runbook covers configuration, kill switch, policy rollback, alert-only mode, metrics and alerts: [`docs/runbook.md`](docs/runbook.md).

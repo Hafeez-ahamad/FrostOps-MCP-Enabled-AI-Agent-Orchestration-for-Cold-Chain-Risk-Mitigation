@@ -199,7 +199,7 @@ def test_policy_update_cannot_lower_autonomy_level(fresh: Api) -> None:
     assert response.status_code == 422
     assert "loosens autonomy" in response.json()["detail"]
     current = fresh.get("/admin/policy", "adi")
-    assert current["history"] == []  # type: ignore[index]
+    assert [h["Version"] for h in current["history"]] == [1]  # type: ignore[index]  # startup only
     assert fresh.service.runtime.gate.catalog.get("divert_to_cold_storage").level.value == "L3"  # type: ignore[union-attr]
 
 
@@ -235,7 +235,10 @@ def test_stricter_policy_update_is_accepted_versioned_and_applied(fresh: Api) ->
     for catalog in (runtime.gate.catalog, runtime.executor.catalog, runtime.catalog):
         assert catalog.get("create_incident_ticket").level.value == "L3"  # type: ignore[union-attr]
     history = fresh.get("/admin/policy", "ana")["history"]  # type: ignore[index]
-    assert [(h["Version"], h["Author"]) for h in history] == [(1, "supervisor:sam")]
+    assert [(h["Version"], h["Author"]) for h in history] == [
+        (1, "system"),
+        (2, "supervisor:sam"),
+    ]
     audit = fresh.get("/audit", "ana", event_type="policy_updated")
     assert audit["entries"][0]["Actor"] == "supervisor:sam"  # type: ignore[index]
 
@@ -243,6 +246,17 @@ def test_stricter_policy_update_is_accepted_versioned_and_applied(fresh: Api) ->
     tickets = [d for d in runtime.dispatcher.decisions if d.action == "create_incident_ticket"]
     assert tickets and all(d.outcome.value != "execute" for d in tickets)
     assert all(d.policy_version == 2 for d in tickets)
+
+
+def test_policy_update_needs_a_higher_version(fresh: Api) -> None:
+    response = fresh.http.put(
+        "/admin/policy",
+        headers=fresh.as_("adi"),
+        json={"yaml_text": ACTIONS_PATH.read_text(encoding="utf-8"), "reason": "same version"},
+    )
+    assert response.status_code == 422
+    assert "must be higher" in response.json()["detail"]
+    assert len(fresh.get("/admin/policy", "adi")["history"]) == 1  # type: ignore[index]
 
 
 def test_invalid_policy_is_rejected(fresh: Api) -> None:
@@ -294,6 +308,22 @@ def test_chat_route_needs_a_token_and_returns_a_thread(api: Api) -> None:
     body = api.http.post("/chat", headers=api.as_("dana"), json={"message": "hi"}).json()
     assert body["answer"] == "echo hi"
     assert body["thread_id"].startswith("dana-")
+
+
+def test_chat_route_is_503_when_the_model_is_unreachable(
+    smoke: SimulationOutput, smoke_scenario: Scenario
+) -> None:
+    def broken(message: str, thread: str, user: User) -> str:
+        raise ConnectionError("connection refused")
+
+    users = UserDirectory()
+    users.add(USERS["dana"], token_hash("token-dana"))
+    client = TestClient(create_app(make_service(smoke, smoke_scenario, hours=0), users, broken))
+    response = client.post(
+        "/chat", headers={"Authorization": "Bearer token-dana"}, json={"message": "hi"}
+    )
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Chat model unavailable: connection refused"}
 
 
 def test_advance_moves_the_simulated_clock(fresh: Api) -> None:

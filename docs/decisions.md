@@ -82,3 +82,4 @@ One line each: decision — reason — date.
 - Policy updates may only tighten autonomy; loosening needs a code change and restart — an API caller with a stolen admin token cannot make an L3 action automatic — 2026-10-29
 - Hypothesis runs without deadline or the too-slow health check (`tests/conftest.py`) — the 8 GB machine pages while the replay runs; same examples and properties — 2026-10-29
 - Demo dispatcher `dana` covers DEP-SD and DEP-LB — the demo's escalation (driver API down) is in DEP-SD, and DEP-OXN stays out of scope to show depot filtering — 2026-10-29
+- Startup policy is stored as the first ops.PolicyVersions row under the YAML `version`; an update must carry a higher `version` (stored under it) — makes the version in decisions match the history and blocks replaying an old policy — 2026-10-31

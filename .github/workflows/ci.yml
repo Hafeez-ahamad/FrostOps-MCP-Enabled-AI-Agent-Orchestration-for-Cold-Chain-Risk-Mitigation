@@ -68,10 +68,13 @@ jobs:
       - name: Install ODBC Driver 18 if missing
         run: |
           if ! odbcinst -q -d -n "ODBC Driver 18 for SQL Server" > /dev/null 2>&1; then
-            curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
-              | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-            curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
-              | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            # The runner image usually has Microsoft's apt repo already; only add it if absent.
+            if ! grep -rqs "packages.microsoft.com" /etc/apt/sources.list /etc/apt/sources.list.d; then
+              curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
+                | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+              curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
+                | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            fi
             sudo apt-get update
             sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
           fi
