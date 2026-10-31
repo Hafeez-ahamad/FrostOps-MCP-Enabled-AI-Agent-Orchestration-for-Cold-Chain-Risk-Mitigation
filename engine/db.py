@@ -6,6 +6,7 @@ Only parameterised SQLAlchemy queries run on these engines. No LLM-written SQL.
 from typing import Literal
 from urllib.parse import quote_plus
 
+import pyodbc
 from pydantic import SecretStr
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.pool import NullPool
@@ -59,6 +60,9 @@ def build_engine(
     The console login is never pooled: its depot scope lives in SESSION_CONTEXT on the
     connection, and a pooled connection would carry one dispatcher's scope to the next.
     """
+    # The ODBC driver manager would otherwise hand a closed connection, with its read-only
+    # depot scope, to the next one that opens; SQLAlchemy does its own pooling where wanted.
+    pyodbc.pooling = False
     url = "mssql+pyodbc:///?odbc_connect=" + quote_plus(
         odbc_connection_string(settings, login, database)
     )
