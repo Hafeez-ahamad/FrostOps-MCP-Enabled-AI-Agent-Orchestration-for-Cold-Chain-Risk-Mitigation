@@ -79,4 +79,12 @@ jobs:
             sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
           fi
       - run: pip install -r requirements-dev.txt
-      - run: pytest -m integration
+      - name: Integration tests
+        run: |
+          set -o pipefail
+          pytest -m integration -q -rf --tb=short 2>&1 | tee integration.log
+      - name: Show the failure summary as an annotation
+        if: failure()
+        run: |
+          msg=$(tail -c 3000 integration.log | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::error title=integration tests::${msg}"
